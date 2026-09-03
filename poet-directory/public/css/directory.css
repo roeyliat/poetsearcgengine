@@ -1,0 +1,333 @@
+:root {
+  --poet-ink: #302e3b;
+  --poet-muted: #646273;
+  --poet-wine: #2c2874;
+  --poet-wine-dark: #211d61;
+  --poet-gold: #83cf32;
+  --poet-cream: #eefbfd;
+  --poet-paper: #ffffff;
+  --poet-line: #dce8ed;
+  --poet-sage: #00a9d4;
+  --poet-purple: #743b98;
+  --poet-shadow: 0 10px 30px rgba(44, 40, 116, 0.08);
+}
+
+.poet-directory {
+  direction: rtl;
+  text-align: right;
+  color: var(--poet-ink);
+  font-family: "Assistant", "Heebo", "Alef", sans-serif;
+  line-height: 1.65;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 0 4rem;
+}
+
+.poet-directory * {
+  box-sizing: border-box;
+}
+
+.poet-hub,
+.poet-search {
+  background: var(--poet-paper);
+  border: 1px solid var(--poet-line);
+  border-radius: 22px;
+  padding: 2rem 1.5rem;
+  box-shadow: var(--poet-shadow);
+}
+
+.poet-hub {
+  background:
+    radial-gradient(circle at 100% 0, rgba(131, 207, 50, 0.18), transparent 42%),
+    linear-gradient(135deg, #fff 0%, var(--poet-cream) 100%);
+  margin-bottom: 1.5rem;
+}
+
+.poet-directory-brand {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+}
+
+.poet-logo {
+  display: block;
+  width: min(170px, 46vw);
+  height: auto;
+}
+
+.poet-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--poet-wine);
+  letter-spacing: 0.04em;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.poet-hub-title,
+.poet-search-head h2 {
+  margin: 0 0 0.75rem;
+  font-family: "David Libre", "Frank Ruhl Libre", serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.2;
+  color: var(--poet-wine);
+}
+
+.poet-hub-lead {
+  font-size: 1.08rem;
+  max-width: 52rem;
+}
+
+.poet-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.4rem 0;
+}
+
+.poet-hub-grid article,
+.poet-hub-details {
+  background: var(--poet-paper);
+  border: 1px solid var(--poet-line);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+}
+
+.poet-hub-grid h3,
+.poet-hub-details summary {
+  margin: 0 0 0.6rem;
+  color: var(--poet-wine-dark);
+  font-size: 1.05rem;
+}
+
+.poet-hub ul,
+.poet-hub-details ul {
+  margin: 0;
+  padding: 0 1.1rem 0 0;
+}
+
+.poet-hub li + li {
+  margin-top: 0.35rem;
+}
+
+.poet-hub-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.poet-search-head p,
+.poet-hub p {
+  margin: 0 0 0.8rem;
+  color: var(--poet-muted);
+}
+
+.poet-filters {
+  display: grid;
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+
+.poet-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.poet-search-field input,
+.poet-age-field input {
+  border: 1px solid var(--poet-line);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  background: #fff;
+}
+
+.poet-search-field input:focus,
+.poet-age-field input:focus {
+  outline: 2px solid var(--poet-gold);
+  border-color: var(--poet-gold);
+}
+
+.poet-filters fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.poet-filters legend {
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+
+.poet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.poet-chips label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--poet-line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.poet-chips input {
+  accent-color: var(--poet-wine);
+}
+
+.poet-chips label:has(input:checked) {
+  background: var(--poet-wine);
+  border-color: var(--poet-wine);
+  color: #fff;
+}
+
+.poet-clear {
+  justify-self: start;
+  background: transparent;
+  border: 1px solid var(--poet-line);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  cursor: pointer;
+  color: var(--poet-ink);
+}
+
+.poet-clear:hover {
+  border-color: var(--poet-wine);
+  color: var(--poet-wine);
+}
+
+.poet-count {
+  margin: 0 0 1rem;
+  font-weight: 700;
+  color: var(--poet-sage);
+}
+
+.poet-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.poet-card {
+  background: #fff;
+  border: 1px solid var(--poet-line);
+  border-radius: 18px;
+  padding: 1.1rem 1.15rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 100%;
+}
+
+.poet-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.poet-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+.poet-badge {
+  flex: 0 0 auto;
+  background: rgba(131, 207, 50, 0.14);
+  color: var(--poet-wine-dark);
+  border: 1px solid var(--poet-gold);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.poet-meta {
+  margin: 0;
+  color: var(--poet-muted);
+  font-size: 0.95rem;
+}
+
+.poet-meta span {
+  display: block;
+}
+
+.poet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.poet-tags em {
+  font-style: normal;
+  background: var(--poet-cream);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.poet-actions {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.poet-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.poet-btn-phone {
+  background: var(--poet-wine);
+  color: #fff;
+}
+
+.poet-btn-mail {
+  background: var(--poet-purple);
+  color: #fff;
+}
+
+.poet-actions a:hover {
+  filter: brightness(1.08);
+}
+
+.poet-empty {
+  background: var(--poet-cream);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.poet-card-notes {
+  font-size: 0.85rem;
+  color: var(--poet-muted);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .poet-hub,
+  .poet-search {
+    padding: 1.25rem 1rem;
+    border-radius: 16px;
+  }
+
+  .poet-hub-grid {
+    grid-template-columns: 1fr;
+  }
+}

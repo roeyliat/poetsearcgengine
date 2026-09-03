@@ -1,0 +1,31 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/*.json
+data/*.csv
+data/*.xlsx
+data/*.xls
+!data/.gitkeep
+poet-directory/data/*.json
+public/data/*.json
+# WordPress core files
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/xmlrpc.php
+index.php
+license.txt
+readme.html
+
+# WordPress uploads & cache
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/cache/
+
+# Security & DB Backups
+wp-config.php
+*.sql
+*.tar.gz
+*.zip

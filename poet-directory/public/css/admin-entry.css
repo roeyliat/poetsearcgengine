@@ -1,0 +1,18 @@
+.poet-admin-footer-entry {
+  padding: 0.45rem 1rem 0.8rem;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.poet-admin-footer-entry a {
+  color: inherit;
+  opacity: 0.55;
+  text-decoration: none;
+}
+
+.poet-admin-footer-entry a:hover,
+.poet-admin-footer-entry a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+}
