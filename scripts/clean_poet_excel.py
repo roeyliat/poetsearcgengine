@@ -63,6 +63,26 @@ HEADER_ALIASES = {
 
 THERAPIST_ID_NAMESPACE = uuid.UUID("54623907-a5ee-4a6c-85bb-a460594ce5ec")
 
+PUBLIC_FIELDS = (
+    "name",
+    "settlement_label",
+    "settlements",
+    "regions",
+    "region_labels",
+    "age_min",
+    "age_max",
+    "age_label",
+    "age_open_ended",
+    "phones",
+    "emails",
+    "languages",
+    "language_labels",
+    "funds",
+    "fund_labels",
+    "online",
+    "in_person",
+)
+
 LANGUAGE_ALIASES = {
     "עברית": "hebrew",
     "hebrew": "hebrew",
@@ -838,6 +858,37 @@ def write_csv(path: Path, therapists: list[dict[str, Any]]) -> None:
             writer.writerow(row)
 
 
+def is_public_therapist(item: dict[str, Any]) -> bool:
+    """Exclude records explicitly marked as non-public without exposing that state."""
+    false_values = {False, 0, "0", "false", "no", "off"}
+    true_values = {True, 1, "1", "true", "yes", "on"}
+
+    for key in ("_poet_visible", "visible", "public"):
+        if key in item and item[key] in false_values:
+            return False
+    if item.get("hidden") in true_values:
+        return False
+    return str(item.get("status", "")).strip().lower() not in {
+        "hidden",
+        "inactive",
+        "archived",
+        "draft",
+        "private",
+        "trash",
+    }
+
+
+def build_public_payload(therapists: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """Return the strict public projection consumed by the static search UI."""
+    return {
+        "therapists": [
+            {field: item.get(field) for field in PUBLIC_FIELDS}
+            for item in therapists
+            if is_public_therapist(item)
+        ]
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Clean POET therapists Excel/CSV into JSON")
     parser.add_argument("--input", "-i", required=True, help="Path to source .xlsx or Google Sheets .csv")
@@ -893,7 +944,8 @@ def main() -> int:
     if (ROOT.parent / "public").exists():
         public_data.mkdir(parents=True, exist_ok=True)
         public_json = public_data / "therapists.json"
-        public_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        public_payload = build_public_payload(payload["therapists"])
+        public_json.write_text(json.dumps(public_payload, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  Hosting JSON: {public_json}")
     plugin_data = ROOT.parent / "poet-directory" / "data"
     if (ROOT.parent / "poet-directory").exists():

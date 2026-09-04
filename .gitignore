@@ -10,6 +10,7 @@ data/*.xls
 !data/.gitkeep
 poet-directory/data/*.json
 public/data/*.json
+!public/data/therapists.json
 # WordPress core files
 /wp-admin/
 /wp-includes/

@@ -32,7 +32,6 @@
         item.name,
         item.settlement_label,
         (item.settlements || []).join(" "),
-        (item.notes || ""),
         (item.fund_labels || []).join(" "),
       ]
         .join(" ")
@@ -104,9 +103,9 @@
     return "tel:" + String(phone).replace(/[^\d+]/g, "");
   }
 
-  function cardHtml(item) {
+  function cardHtml(item, index) {
     const location = item.settlement_label || (item.online ? "טיפול מקוון" : "יישוב לא צוין");
-    const cardId = "poet-card-" + escapeHtml(item.source_row || item.id || "");
+    const cardId = "poet-card-" + index;
     const funds = (item.fund_labels || []).map(function (label) {
       return "<em>" + escapeHtml(label) + "</em>";
     }).join("");
@@ -126,7 +125,6 @@
         '" aria-label="שליחת מייל אל ' + escapeHtml(item.name) + '">מייל</a>'
       );
     }).join("");
-    const notes = item.notes ? '<p class="poet-card-notes">' + escapeHtml(item.notes) + "</p>" : "";
     const age = item.age_label ? "<span>גילאים: " + escapeHtml(item.age_label) + "</span>" : "";
     const regions = (item.region_labels || []).length
       ? "<span>" + escapeHtml((item.region_labels || []).join(", ")) + "</span>"
@@ -145,7 +143,6 @@
           age +
         "</p>" +
         '<div class="poet-tags">' + funds + langs + onlineTag + "</div>" +
-        notes +
         '<div class="poet-actions">' + phones + emails + "</div>" +
       "</article>"
     );
