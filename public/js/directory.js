@@ -135,7 +135,6 @@
       '<article class="poet-card" aria-labelledby="' + cardId + '">' +
         '<div class="poet-card-head">' +
           '<h3 id="' + cardId + '">' + escapeHtml(item.name) + "</h3>" +
-          '<span class="poet-badge">מוסמכת POET</span>' +
         "</div>" +
         '<p class="poet-meta">' +
           '<span class="poet-meta-location">' + escapeHtml(location) + "</span>" +

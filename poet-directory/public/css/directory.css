@@ -63,6 +63,34 @@
   font-weight: 700;
 }
 
+.poet-directory-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.poet-directory-title-row .poet-hub-title {
+  margin-bottom: 0;
+}
+
+.poet-admin-header-entry {
+  padding-inline-start: 0.7rem;
+  border-inline-start: 1px solid var(--poet-line);
+  color: var(--poet-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+  text-decoration: none;
+}
+
+.poet-admin-header-entry:hover,
+.poet-admin-header-entry:focus-visible {
+  color: var(--poet-wine);
+  opacity: 1;
+  text-decoration: underline;
+}
+
 .poet-hub-title,
 .poet-search-head h2 {
   margin: 0 0 0.75rem;

@@ -1,0 +1,412 @@
+:root {
+  --poet-ink: #302e3b;
+  --poet-muted: #646273;
+  --poet-wine: #2c2874;
+  --poet-wine-dark: #211d61;
+  --poet-gold: #83cf32;
+  --poet-cream: #eefbfd;
+  --poet-paper: #ffffff;
+  --poet-line: #dce8ed;
+  --poet-sage: #00a9d4;
+  --poet-shadow: 0 10px 30px rgba(44, 40, 116, 0.08);
+}
+
+body.poet-therapist-admin {
+  background: var(--poet-cream);
+  color: var(--poet-ink);
+  font-family: "Assistant", "Heebo", "Alef", sans-serif;
+}
+
+body.poet-therapist-admin #wpcontent,
+body.poet-therapist-admin .wrap {
+  direction: rtl;
+  text-align: right;
+}
+
+body.poet-therapist-admin .wrap {
+  margin: 20px auto 40px;
+  max-width: 1120px;
+  padding: 0 16px 24px;
+}
+
+body.poet-therapist-admin .wrap h1,
+body.poet-therapist-admin .wp-heading-inline {
+  font-family: "David Libre", "Frank Ruhl Libre", serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--poet-wine);
+  padding: 8px 0 0;
+}
+
+body.poet-therapist-admin .page-title-action {
+  display: inline-flex;
+  align-items: center;
+  margin: 8px 12px 0 0;
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--poet-wine);
+  color: #fff !important;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  top: 0;
+}
+
+body.poet-therapist-admin .page-title-action:hover,
+body.poet-therapist-admin .page-title-action:focus {
+  background: var(--poet-wine-dark);
+  color: #fff !important;
+  border: 0;
+  box-shadow: none;
+}
+
+body.poet-therapist-admin .search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  float: none;
+}
+
+body.poet-therapist-admin #post-search-input,
+body.poet-therapist-admin .poet-admin-grid input[type="text"],
+body.poet-therapist-admin .poet-admin-grid input[type="number"],
+body.poet-therapist-admin .poet-admin-grid textarea {
+  border: 1px solid var(--poet-line);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.poet-therapist-admin #post-search-input:focus,
+body.poet-therapist-admin .poet-admin-grid input:focus,
+body.poet-therapist-admin .poet-admin-grid textarea:focus {
+  outline: 2px solid var(--poet-gold);
+  border-color: var(--poet-gold);
+  box-shadow: none;
+}
+
+body.poet-therapist-admin #search-submit,
+body.poet-therapist-admin .button {
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+body.poet-therapist-admin .tablenav.top .tablenav-pages,
+body.poet-therapist-admin .tablenav.bottom,
+body.poet-therapist-admin .tablenav .actions,
+body.poet-therapist-admin .subsubsub,
+body.poet-therapist-admin .search-box + br,
+body.poet-therapist-admin #screen-meta,
+body.poet-therapist-admin #screen-meta-links,
+body.poet-therapist-admin .wp-header-end {
+  display: none;
+}
+
+body.poet-therapist-admin .tablenav.top {
+  height: auto;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+body.poet-therapist-admin .wp-list-table {
+  background: var(--poet-paper);
+  border: 1px solid var(--poet-line);
+  border-radius: 18px;
+  box-shadow: var(--poet-shadow);
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+body.poet-therapist-admin .wp-list-table thead th,
+body.poet-therapist-admin .wp-list-table thead td {
+  background: #f7fdff;
+  border-bottom: 1px solid var(--poet-line);
+  color: var(--poet-wine);
+  font-weight: 800;
+}
+
+body.poet-therapist-admin .wp-list-table td,
+body.poet-therapist-admin .wp-list-table th {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+body.poet-therapist-admin .wp-list-table tbody tr:hover {
+  background: #f7fdff;
+}
+
+body.poet-therapist-admin .wp-list-table .row-actions,
+body.poet-therapist-admin .wp-list-table .check-column,
+body.poet-therapist-admin .post-state {
+  display: none;
+}
+
+body.poet-therapist-admin .poet-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+body.poet-therapist-admin .poet-status.is-visible {
+  background: rgba(131, 207, 50, 0.16);
+  color: var(--poet-wine-dark);
+}
+
+body.poet-therapist-admin .poet-status.is-hidden {
+  background: #eef0f2;
+  color: var(--poet-muted);
+}
+
+body.poet-therapist-admin .poet-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.poet-therapist-admin .poet-row-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.3rem 0.85rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+body.poet-therapist-admin .poet-btn-edit {
+  background: var(--poet-wine);
+  color: #fff;
+}
+
+body.poet-therapist-admin .poet-btn-toggle {
+  background: #fff;
+  color: var(--poet-wine);
+  border: 1px solid var(--poet-line);
+}
+
+body.poet-therapist-admin .poet-row-actions a:hover {
+  filter: brightness(1.06);
+}
+
+body.poet-therapist-admin .notice,
+body.poet-therapist-admin .poet-admin-flash {
+  border: 1px solid var(--poet-line);
+  border-right: 4px solid var(--poet-gold);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+  margin: 12px 0;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+body.poet-therapist-admin .notice-error {
+  border-right-color: #d63638;
+}
+
+body.poet-therapist-admin #poststuff {
+  padding-top: 8px;
+}
+
+body.poet-therapist-admin #post-body-content,
+body.poet-therapist-admin #postbox-container-1,
+body.poet-therapist-admin.post-php #titlediv,
+body.poet-therapist-admin.post-new-php #titlediv {
+  display: none !important;
+}
+
+body.poet-therapist-admin #poststuff #post-body.columns-2 {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+body.poet-therapist-admin #post-body.columns-2 #postbox-container-2 {
+  width: 100%;
+}
+
+body.poet-therapist-admin #poet_therapist_details {
+  border: 1px solid var(--poet-line);
+  border-radius: 18px;
+  box-shadow: var(--poet-shadow);
+  background: var(--poet-paper);
+}
+
+body.poet-therapist-admin #poet_therapist_details .postbox-header {
+  border-bottom: 1px solid var(--poet-line);
+  background: #f7fdff;
+  border-radius: 18px 18px 0 0;
+}
+
+body.poet-therapist-admin #poet_therapist_details .hndle {
+  font-family: "David Libre", "Frank Ruhl Libre", serif;
+  color: var(--poet-wine);
+  font-size: 1.2rem;
+}
+
+body.poet-therapist-admin #poet_therapist_details .handlediv {
+  display: none;
+}
+
+.poet-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  direction: rtl;
+  text-align: right;
+}
+
+.poet-admin-grid label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.poet-admin-grid .full {
+  grid-column: 1 / -1;
+}
+
+.poet-admin-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.poet-admin-checks label {
+  font-weight: 400;
+}
+
+.poet-admin-visibility {
+  padding: 14px;
+  border-right: 4px solid var(--poet-wine);
+  background: #f7fdff;
+  border-radius: 12px;
+}
+
+.poet-admin-visibility label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.poet-admin-save {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+  padding-top: 8px;
+  border-top: 1px solid var(--poet-line);
+}
+
+.poet-admin-save .button-primary {
+  min-width: 140px;
+  min-height: 42px;
+  background: var(--poet-wine);
+  border: 0;
+  color: #fff;
+  font-size: 15px;
+}
+
+.poet-admin-save .button-primary:hover,
+.poet-admin-save .button-primary:focus {
+  background: var(--poet-wine-dark);
+  color: #fff;
+  border: 0;
+}
+
+.poet-admin-save .poet-admin-cancel {
+  min-width: 140px;
+  min-height: 42px;
+  background: #fff;
+  border: 1px solid var(--poet-line);
+  color: var(--poet-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.poet-admin-save .poet-admin-cancel:hover {
+  border-color: var(--poet-wine);
+  color: var(--poet-wine);
+}
+
+.poet-manager-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--poet-line);
+  padding: 12px 20px;
+}
+
+.poet-manager-bar img {
+  width: 92px;
+  height: auto;
+  display: block;
+}
+
+.poet-manager-bar a {
+  color: var(--poet-muted);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.poet-manager-bar a:hover {
+  color: var(--poet-wine);
+  text-decoration: underline;
+}
+
+body.poet-manager-app #adminmenuback,
+body.poet-manager-app #adminmenuwrap,
+body.poet-manager-app #wpadminbar,
+body.poet-manager-app #wpfooter,
+body.poet-manager-app #collapse-button,
+body.poet-manager-app .update-nag,
+body.poet-manager-app #wp-admin-bar-root-default {
+  display: none !important;
+}
+
+body.poet-manager-app #wpcontent,
+body.poet-manager-app #wpfooter {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding-left: 0;
+}
+
+body.poet-manager-app.admin-bar,
+body.poet-manager-app.wp-admin {
+  padding-top: 0 !important;
+}
+
+html.wp-toolbar:has(body.poet-manager-app) {
+  padding-top: 0 !important;
+}
+
+@media (max-width: 782px) {
+  .poet-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.poet-therapist-admin .wrap h1,
+  body.poet-therapist-admin .wp-heading-inline {
+    font-size: 1.55rem;
+  }
+
+  body.poet-therapist-admin .wp-list-table td,
+  body.poet-therapist-admin .wp-list-table th {
+    padding: 10px 12px;
+  }
+}

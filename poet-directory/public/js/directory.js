@@ -124,7 +124,6 @@
       '<article class="poet-card">' +
         '<div class="poet-card-head">' +
           "<h3>" + escapeHtml(item.name) + "</h3>" +
-          '<span class="poet-badge">מוסמכת POET</span>' +
         "</div>" +
         '<p class="poet-meta">' +
           "<span>" + escapeHtml(location) + "</span>" +

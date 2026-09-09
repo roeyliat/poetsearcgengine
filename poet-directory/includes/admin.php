@@ -9,8 +9,7 @@ add_action('save_post_poet_therapist', 'poet_save_therapist_meta', 10, 2);
 add_filter('manage_poet_therapist_posts_columns', 'poet_admin_columns');
 add_action('manage_poet_therapist_posts_custom_column', 'poet_admin_column_content', 10, 2);
 add_filter('manage_edit-poet_therapist_sortable_columns', 'poet_sortable_columns');
-add_action('restrict_manage_posts', 'poet_admin_filters');
-add_action('pre_get_posts', 'poet_admin_filter_query');
+add_action('pre_get_posts', 'poet_admin_list_query');
 add_action('admin_notices', 'poet_admin_shortcode_notice');
 add_filter('posts_search', 'poet_admin_search_business_fields', 10, 2);
 add_filter('post_row_actions', 'poet_therapist_row_actions', 10, 2);
@@ -22,10 +21,205 @@ add_filter('wp_insert_post_data', 'poet_force_therapist_published', 10, 2);
 add_filter('redirect_post_location', 'poet_validation_redirect', 10, 2);
 add_action('admin_footer-post.php', 'poet_admin_edit_script');
 add_action('admin_footer-post-new.php', 'poet_admin_edit_script');
-add_action('admin_head', 'poet_admin_edit_styles');
+add_action('admin_footer-edit.php', 'poet_admin_list_script');
 add_action('add_meta_boxes_poet_therapist', 'poet_remove_wordpress_meta_boxes', 100);
 add_filter('screen_options_show_screen', 'poet_hide_therapist_screen_options', 10, 2);
 add_action('current_screen', 'poet_remove_therapist_help');
+add_filter('login_redirect', 'poet_manager_login_redirect', 10, 3);
+add_action('admin_init', 'poet_restrict_manager_admin');
+add_action('admin_menu', 'poet_hide_manager_admin_menus', 999);
+add_action('admin_enqueue_scripts', 'poet_enqueue_admin_assets');
+add_filter('admin_body_class', 'poet_admin_body_class');
+add_action('in_admin_header', 'poet_manager_app_header', 0);
+add_filter('show_admin_bar', 'poet_manager_show_admin_bar');
+add_filter('admin_footer_text', 'poet_manager_footer_text', 99);
+add_filter('update_footer', 'poet_manager_footer_text', 99);
+add_filter('disable_months_dropdown', 'poet_disable_months_dropdown', 10, 2);
+add_filter('edit_poet_therapist_per_page', static fn(): int => 1000);
+add_filter('list_table_primary_column', 'poet_list_primary_column', 10, 2);
+
+function poet_is_limited_poet_manager(?WP_User $user = null): bool
+{
+    if (!$user instanceof WP_User) {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+        $user = wp_get_current_user();
+    }
+    if (!$user->exists() || user_can($user, 'manage_options')) {
+        return false;
+    }
+    return in_array('poet_manager', (array) $user->roles, true);
+}
+
+function poet_manager_screen_url(): string
+{
+    return admin_url('edit.php?post_type=poet_therapist');
+}
+
+function poet_manager_login_redirect($redirect_to, $requested_redirect_to, $user)
+{
+    if (!poet_is_limited_poet_manager($user instanceof WP_User ? $user : null)) {
+        return $redirect_to;
+    }
+
+    $target = is_string($requested_redirect_to) && $requested_redirect_to !== ''
+        ? $requested_redirect_to
+        : (string) $redirect_to;
+
+    if (poet_is_allowed_manager_redirect($target)) {
+        return $target;
+    }
+
+    return poet_manager_screen_url();
+}
+
+function poet_is_allowed_manager_redirect(string $url): bool
+{
+    $path = (string) wp_parse_url($url, PHP_URL_PATH);
+    $query = [];
+    parse_str((string) wp_parse_url($url, PHP_URL_QUERY), $query);
+
+    if (str_ends_with($path, '/wp-admin/post-new.php') && ($query['post_type'] ?? '') === 'poet_therapist') {
+        return true;
+    }
+    if (str_ends_with($path, '/wp-admin/edit.php') && ($query['post_type'] ?? '') === 'poet_therapist') {
+        return true;
+    }
+    if (str_ends_with($path, '/wp-admin/post.php') && !empty($query['post'])) {
+        return get_post_type(absint($query['post'])) === 'poet_therapist';
+    }
+
+    return false;
+}
+
+function poet_restrict_manager_admin(): void
+{
+    if (!poet_is_limited_poet_manager() || wp_doing_ajax()) {
+        return;
+    }
+
+    global $pagenow;
+    $allowed_pages = ['edit.php', 'post.php', 'post-new.php', 'admin-post.php'];
+    if (!in_array((string) $pagenow, $allowed_pages, true)) {
+        wp_safe_redirect(poet_manager_screen_url());
+        exit;
+    }
+
+    $post_type = sanitize_key(wp_unslash($_REQUEST['post_type'] ?? ''));
+    if ($pagenow === 'edit.php' && $post_type !== 'poet_therapist') {
+        wp_safe_redirect(poet_manager_screen_url());
+        exit;
+    }
+    if ($pagenow === 'post-new.php' && $post_type !== 'poet_therapist') {
+        wp_safe_redirect(admin_url('post-new.php?post_type=poet_therapist'));
+        exit;
+    }
+    if ($pagenow === 'post.php') {
+        $post_id = absint($_REQUEST['post'] ?? $_REQUEST['post_ID'] ?? 0);
+        if ($post_id && get_post_type($post_id) !== 'poet_therapist') {
+            wp_safe_redirect(poet_manager_screen_url());
+            exit;
+        }
+    }
+    if ($pagenow === 'admin-post.php') {
+        $action = sanitize_key(wp_unslash($_REQUEST['action'] ?? ''));
+        if ($action !== 'poet_toggle_visibility') {
+            wp_safe_redirect(poet_manager_screen_url());
+            exit;
+        }
+    }
+}
+
+function poet_hide_manager_admin_menus(): void
+{
+    if (!poet_is_limited_poet_manager()) {
+        return;
+    }
+
+    remove_menu_page('index.php');
+    remove_menu_page('edit.php');
+    remove_menu_page('upload.php');
+    remove_menu_page('edit.php?post_type=page');
+    remove_menu_page('edit-comments.php');
+    remove_menu_page('themes.php');
+    remove_menu_page('plugins.php');
+    remove_menu_page('users.php');
+    remove_menu_page('tools.php');
+    remove_menu_page('options-general.php');
+    remove_menu_page('profile.php');
+}
+
+function poet_is_therapist_admin_screen(): bool
+{
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    return $screen
+        && $screen->post_type === 'poet_therapist'
+        && in_array($screen->base, ['edit', 'post'], true);
+}
+
+function poet_enqueue_admin_assets(): void
+{
+    if (!poet_is_therapist_admin_screen() && !(poet_is_limited_poet_manager() && is_admin())) {
+        return;
+    }
+    wp_enqueue_style(
+        'poet-admin-fonts',
+        'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=David+Libre:wght@500;700&display=swap',
+        [],
+        false
+    );
+    wp_enqueue_style(
+        'poet-admin',
+        POET_DIR_URL . 'public/css/admin.css',
+        ['poet-admin-fonts'],
+        POET_DIR_VERSION
+    );
+}
+
+function poet_admin_body_class(string $classes): string
+{
+    if (poet_is_therapist_admin_screen()) {
+        $classes .= ' poet-therapist-admin';
+    }
+    if (poet_is_limited_poet_manager()) {
+        $classes .= ' poet-manager-app';
+    }
+    return $classes;
+}
+
+function poet_manager_app_header(): void
+{
+    if (!poet_is_limited_poet_manager() || !poet_is_therapist_admin_screen()) {
+        return;
+    }
+    ?>
+    <div class="poet-manager-bar" dir="rtl">
+        <img src="https://frisch-ot.com/wp-content/uploads/2021/10/POET-logoR-72dpi.png" alt="POET">
+        <a href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">יציאה</a>
+    </div>
+    <?php
+}
+
+function poet_manager_show_admin_bar(bool $show): bool
+{
+    return poet_is_limited_poet_manager() ? false : $show;
+}
+
+function poet_manager_footer_text($text)
+{
+    return poet_is_limited_poet_manager() ? '' : $text;
+}
+
+function poet_disable_months_dropdown(bool $disable, string $post_type): bool
+{
+    return $post_type === 'poet_therapist' ? true : $disable;
+}
+
+function poet_list_primary_column(string $default, string $screen_id): string
+{
+    return $screen_id === 'edit-poet_therapist' ? 'title' : $default;
+}
 
 function poet_admin_shortcode_notice(): void
 {
@@ -33,11 +227,17 @@ function poet_admin_shortcode_notice(): void
     if (!$screen || $screen->post_type !== 'poet_therapist') {
         return;
     }
+    $saved = sanitize_key(wp_unslash($_GET['poet_saved'] ?? ''));
+    if ($saved === 'added') {
+        echo '<div class="poet-admin-flash">המטפלת נוספה בהצלחה.</div>';
+    } elseif ($saved === 'updated') {
+        echo '<div class="poet-admin-flash">פרטי המטפלת נשמרו בהצלחה.</div>';
+    }
     $visibility = sanitize_key(wp_unslash($_GET['poet_visibility'] ?? ''));
     if ($visibility === 'shown') {
-        echo '<div class="notice notice-success is-dismissible"><p>המטפלת מוצגת כעת בחיפוש הציבורי.</p></div>';
+        echo '<div class="poet-admin-flash">המטפלת מוצגת כעת בחיפוש הציבורי.</div>';
     } elseif ($visibility === 'hidden') {
-        echo '<div class="notice notice-success is-dismissible"><p>המטפלת הוסתרה מהחיפוש הציבורי ונשמרה במערכת.</p></div>';
+        echo '<div class="poet-admin-flash">המטפלת הוסתרה מהחיפוש הציבורי ונשמרה במערכת.</div>';
     }
     $post_id = absint($_GET['post'] ?? 0);
     if ($post_id && !empty($_GET['poet_validation'])) {
@@ -91,18 +291,6 @@ function poet_render_meta_box(WP_Post $post): void
         'poet_modality' => poet_term_slugs($post->ID, 'poet_modality'),
     ];
     ?>
-    <style>
-        .poet-admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; direction: rtl; text-align: right; }
-        .poet-admin-grid label { font-weight: 600; display: block; margin-bottom: 6px; }
-        .poet-admin-grid .full { grid-column: 1 / -1; }
-        .poet-admin-checks { display: flex; flex-wrap: wrap; gap: 10px 16px; }
-        .poet-admin-checks label { font-weight: 400; }
-        .poet-admin-visibility { padding: 14px; border-right: 4px solid #2271b1; background: #f0f6fc; }
-        .poet-admin-visibility label { display: flex; align-items: center; gap: 8px; font-size: 15px; }
-        .poet-admin-save { display: flex; justify-content: flex-start; padding-top: 8px; border-top: 1px solid #dcdcde; }
-        .poet-admin-save .button { min-width: 180px; min-height: 42px; font-size: 15px; font-weight: 600; }
-        @media (max-width: 782px) { .poet-admin-grid { grid-template-columns: 1fr; } }
-    </style>
     <div class="poet-admin-grid">
         <p class="full">
             <label for="poet_name">שם המטפלת</label>
@@ -205,7 +393,8 @@ function poet_render_meta_box(WP_Post $post): void
             <textarea class="widefat" rows="3" id="poet_notes" name="poet_notes"><?php echo esc_textarea($notes); ?></textarea>
         </p>
         <div class="poet-admin-save full">
-            <button type="submit" name="publish" id="publish" class="button button-primary button-large" value="1">שמירת מטפלת</button>
+            <button type="submit" name="publish" id="publish" class="button button-primary button-large" value="1">שמירה</button>
+            <a class="button poet-admin-cancel" href="<?php echo esc_url(poet_manager_screen_url()); ?>">ביטול</a>
         </div>
     </div>
     <?php
@@ -316,16 +505,7 @@ function poet_admin_search_business_fields(string $search, WP_Query $query): str
 
     global $wpdb;
     $like = '%' . $wpdb->esc_like($term) . '%';
-    return $wpdb->prepare(
-        " AND ({$wpdb->posts}.post_title LIKE %s OR EXISTS (
-            SELECT 1 FROM {$wpdb->postmeta} poet_search_meta
-            WHERE poet_search_meta.post_id = {$wpdb->posts}.ID
-            AND poet_search_meta.meta_key IN ('_poet_settlement', '_poet_phones', '_poet_emails')
-            AND poet_search_meta.meta_value LIKE %s
-        ))",
-        $like,
-        $like
-    );
+    return $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $like);
 }
 
 function poet_therapist_row_actions(array $actions, WP_Post $post): array
@@ -333,27 +513,20 @@ function poet_therapist_row_actions(array $actions, WP_Post $post): array
     if ($post->post_type !== 'poet_therapist') {
         return $actions;
     }
-    unset($actions['trash'], $actions['delete'], $actions['view'], $actions['inline hide-if-no-js']);
-    if (isset($actions['edit'])) {
-        $actions['edit'] = '<a href="' . esc_url(get_edit_post_link($post->ID)) . '">עריכה</a>';
-    }
-    $visible = poet_is_therapist_visible($post->ID);
-    $url = wp_nonce_url(
-        admin_url('admin-post.php?action=poet_toggle_visibility&post_id=' . $post->ID),
-        'poet_toggle_visibility_' . $post->ID
+    return [];
+}
+
+function poet_visibility_toggle_url(int $post_id): string
+{
+    return wp_nonce_url(
+        admin_url('admin-post.php?action=poet_toggle_visibility&post_id=' . $post_id),
+        'poet_toggle_visibility_' . $post_id
     );
-    $actions['poet_visibility'] = sprintf(
-        '<a href="%s">%s</a>',
-        esc_url($url),
-        $visible ? 'הסתרה' : 'הצגה'
-    );
-    return $actions;
 }
 
 function poet_remove_delete_bulk_actions(array $actions): array
 {
-    unset($actions['trash'], $actions['delete'], $actions['edit']);
-    return $actions;
+    return [];
 }
 
 function poet_hide_wordpress_status_views(array $views): array
@@ -409,9 +582,11 @@ function poet_validation_redirect(string $location, int $post_id): string
     $key = 'poet_validation_' . get_current_user_id() . '_' . $post_id;
     if (get_transient($key)) {
         $location = remove_query_arg('message', $location);
-        $location = add_query_arg('poet_validation', '1', $location);
+        return add_query_arg('poet_validation', '1', $location);
     }
-    return $location;
+    $original = sanitize_key(wp_unslash($_POST['original_post_status'] ?? ''));
+    $saved = in_array($original, ['auto-draft', 'new', 'draft'], true) ? 'added' : 'updated';
+    return add_query_arg('poet_saved', $saved, poet_manager_screen_url());
 }
 
 function poet_remove_wordpress_meta_boxes(): void
@@ -446,20 +621,25 @@ function poet_remove_therapist_help(WP_Screen $screen): void
     }
 }
 
-function poet_admin_edit_styles(): void
+function poet_admin_list_script(): void
 {
     $screen = get_current_screen();
-    if (!$screen || $screen->post_type !== 'poet_therapist' || $screen->base !== 'post') {
+    if (!$screen || $screen->post_type !== 'poet_therapist' || $screen->base !== 'edit') {
         return;
     }
     ?>
-    <style>
-        #screen-meta-links, #post-body-content, #postbox-container-1 { display: none !important; }
-        #poststuff #post-body.columns-2 { margin-right: 0; }
-        #post-body.columns-2 #postbox-container-2 { width: 100%; }
-        #poet_therapist_details { border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
-        #poet_therapist_details .postbox-header { border-bottom-color: #e2e4e7; }
-    </style>
+    <script>
+        (function () {
+            const input = document.getElementById('post-search-input');
+            if (input) {
+                input.placeholder = 'חיפוש לפי שם מטפלת';
+            }
+            const submit = document.getElementById('search-submit');
+            if (submit) {
+                submit.value = 'חיפוש';
+            }
+        }());
+    </script>
     <?php
 }
 
@@ -480,7 +660,7 @@ function poet_admin_edit_script(): void
             const save = document.getElementById('publish');
             if (!form || !name || !city || !phones || !emails || !save) return;
 
-            save.value = 'שמירת מטפלת';
+            save.value = 'שמירה';
             name.required = true;
 
             function validate() {
@@ -518,39 +698,45 @@ function poet_admin_edit_script(): void
 function poet_admin_columns(array $columns): array
 {
     return [
-        'cb' => $columns['cb'] ?? '',
-        'title' => 'שם',
+        'title' => 'שם המטפלת',
+        'poet_region' => 'אזור',
         'poet_city' => 'יישוב',
         'poet_phone' => 'טלפון',
-        'poet_email' => 'מייל',
-        'poet_langs' => 'שפות',
         'poet_status' => 'סטטוס',
+        'poet_actions' => '',
     ];
 }
 
 function poet_admin_column_content(string $column, int $post_id): void
 {
     switch ($column) {
+        case 'poet_region':
+            $regions = wp_get_object_terms($post_id, 'poet_region', ['fields' => 'names']);
+            echo (!is_wp_error($regions) && $regions) ? esc_html(implode(', ', $regions)) : '—';
+            break;
         case 'poet_city':
-            echo esc_html((string) get_post_meta($post_id, '_poet_settlement', true));
+            $city = (string) get_post_meta($post_id, '_poet_settlement', true);
+            echo $city !== '' ? esc_html($city) : '—';
             break;
         case 'poet_phone':
             $phones = poet_json_meta($post_id, '_poet_phones');
             echo $phones ? esc_html(implode(' / ', $phones)) : '—';
             break;
-        case 'poet_email':
-            $emails = poet_json_meta($post_id, '_poet_emails');
-            echo $emails ? esc_html(implode(' / ', $emails)) : '—';
-            break;
-        case 'poet_langs':
-            echo esc_html(implode(', ', wp_get_object_terms($post_id, 'poet_language', ['fields' => 'names'])));
-            break;
         case 'poet_status':
             $visible = poet_is_therapist_visible($post_id);
             printf(
-                '<strong style="color:%s">%s</strong>',
-                esc_attr($visible ? '#008a20' : '#646970'),
+                '<span class="poet-status %s">%s</span>',
+                esc_attr($visible ? 'is-visible' : 'is-hidden'),
                 esc_html($visible ? 'מוצגת' : 'מוסתרת')
+            );
+            break;
+        case 'poet_actions':
+            $visible = poet_is_therapist_visible($post_id);
+            printf(
+                '<div class="poet-row-actions"><a class="poet-btn-edit" href="%s">עריכה</a><a class="poet-btn-toggle" href="%s">%s</a></div>',
+                esc_url(get_edit_post_link($post_id) ?: ''),
+                esc_url(poet_visibility_toggle_url($post_id)),
+                esc_html($visible ? 'הסתרה' : 'הצגה')
             );
             break;
     }
@@ -562,40 +748,14 @@ function poet_sortable_columns(array $columns): array
     return $columns;
 }
 
-function poet_admin_filters(string $post_type): void
-{
-    if ($post_type !== 'poet_therapist') {
-        return;
-    }
-    $region = sanitize_text_field(wp_unslash($_GET['poet_region_filter'] ?? ''));
-    $fund = sanitize_text_field(wp_unslash($_GET['poet_fund_filter'] ?? ''));
-    echo '<select name="poet_region_filter"><option value="">כל האזורים</option>';
-    foreach (poet_region_labels() as $slug => $label) {
-        printf('<option value="%s"%s>%s</option>', esc_attr($slug), selected($region, $slug, false), esc_html($label));
-    }
-    echo '</select>';
-    echo '<select name="poet_fund_filter"><option value="">כל המסגרות</option>';
-    foreach (poet_fund_labels() as $slug => $label) {
-        printf('<option value="%s"%s>%s</option>', esc_attr($slug), selected($fund, $slug, false), esc_html($label));
-    }
-    echo '</select>';
-}
-
-function poet_admin_filter_query(WP_Query $query): void
+function poet_admin_list_query(WP_Query $query): void
 {
     if (!is_admin() || !$query->is_main_query() || $query->get('post_type') !== 'poet_therapist') {
         return;
     }
-    $tax = [];
-    $region = sanitize_text_field(wp_unslash($_GET['poet_region_filter'] ?? ''));
-    $fund = sanitize_text_field(wp_unslash($_GET['poet_fund_filter'] ?? ''));
-    if ($region) {
-        $tax[] = ['taxonomy' => 'poet_region', 'field' => 'slug', 'terms' => $region];
-    }
-    if ($fund) {
-        $tax[] = ['taxonomy' => 'poet_fund', 'field' => 'slug', 'terms' => $fund];
-    }
-    if ($tax) {
-        $query->set('tax_query', $tax);
+    $query->set('posts_per_page', 1000);
+    if ($query->get('orderby') === '' || $query->get('orderby') === 'date') {
+        $query->set('orderby', 'title');
+        $query->set('order', 'ASC');
     }
 }

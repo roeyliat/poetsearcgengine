@@ -101,6 +101,29 @@ summary:focus-visible {
   font-weight: 800;
 }
 
+.poet-brand-line {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.poet-admin-header-entry {
+  padding-inline-start: 0.65rem;
+  border-inline-start: 1px solid var(--poet-line);
+  color: var(--poet-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+  text-decoration: none;
+}
+
+.poet-admin-header-entry:hover,
+.poet-admin-header-entry:focus-visible {
+  color: var(--poet-wine);
+  opacity: 1;
+  text-decoration: underline;
+}
+
 .poet-brand-subtitle {
   color: var(--poet-muted);
   font-size: 0.86rem;

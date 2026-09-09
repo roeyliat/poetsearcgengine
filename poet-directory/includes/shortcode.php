@@ -50,9 +50,12 @@ function poet_directory_shortcode(): string
                 <img class="poet-logo" src="https://frisch-ot.com/wp-content/uploads/2021/10/POET-logoR-72dpi.png" alt="POET">
             </div>
             <p class="poet-kicker">Parental Occupational Executive Training</p>
-            <h2 class="poet-hub-title">גישת POET</h2>
+            <div class="poet-directory-title-row">
+                <h2 class="poet-hub-title">גישת POET</h2>
+                <a class="poet-admin-header-entry" href="<?php echo esc_url(admin_url('edit.php?post_type=poet_therapist')); ?>">כניסת מנהל</a>
+            </div>
             <p class="poet-hub-lead">
-                POET (פריש, תירוש ורוזנבלום, 2016) היא התערבות מבוססת ראיות מחקריות לשיפור התפקוד והתפקודים הניהוליים של ילדים עם תסמיני ADHD.
+                POET (פריש, תירוש ורוזנבלום, 2020) היא התערבות מבוססת ראיות מחקריות לשיפור התפקוד והתפקודים הניהוליים של ילדים עם תסמיני ADHD.
             </p>
             <p>
                 זהו טיפול בריפוי בעיסוק לשיפור תפקוד יום־יומי של ילדים בני 3–8 שנים, המציגים תסמינים מוקדמים של ADHD ו/או עיכוב בהתפתחות התפקודים הניהוליים. שמונת מפגשי הטיפול מתמקדים בהדרכת הורים.
