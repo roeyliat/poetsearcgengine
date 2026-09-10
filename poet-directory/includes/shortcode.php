@@ -57,9 +57,6 @@ function poet_directory_shortcode(): string
             <p class="poet-hub-lead">
                 POET (פריש, תירוש ורוזנבלום, 2020) היא התערבות מבוססת ראיות מחקריות לשיפור התפקוד והתפקודים הניהוליים של ילדים עם תסמיני ADHD.
             </p>
-            <p>
-                זהו טיפול בריפוי בעיסוק לשיפור תפקוד יום־יומי של ילדים בני 3–8 שנים, המציגים תסמינים מוקדמים של ADHD ו/או עיכוב בהתפתחות התפקודים הניהוליים. שמונת מפגשי הטיפול מתמקדים בהדרכת הורים.
-            </p>
 
             <div class="poet-hub-grid">
                 <article>
@@ -94,7 +91,7 @@ function poet_directory_shortcode(): string
 
         <section class="poet-search" aria-label="חיפוש מרפאות בעיסוק מוסמכות POET">
             <div class="poet-search-head">
-                <h2>כלי לחיפוש מטפלות POET</h2>
+                <h2>כלי לחיפוש מרפאות/ים בעיסוק POET</h2>
                 <p>חפשו לפי שם, יישוב או סינון לפי אזור, קופה, שפה, גיל ואופן הטיפול.</p>
             </div>
 
