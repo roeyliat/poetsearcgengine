@@ -25,6 +25,8 @@ const appState = {
   authReady: false,
 };
 
+window.__poetAdminAppState = appState;
+
 const elements = {
   loginScreen: document.getElementById("login-screen"),
   dashboardScreen: document.getElementById("dashboard-screen"),
@@ -41,14 +43,23 @@ async function initFirebaseClient() {
   const config = firebaseConfig;
 
   if (!config || !config.apiKey || !config.projectId || !config.appId) {
-    setLoginMessage("פרטי Firebase חסרים מהקובץ ההגדרה של האתר.", true);
-    return;
+    const message = "פרטי Firebase חסרים מהקובץ ההגדרה של האתר.";
+    console.error(message);
+    setLoginMessage(message, true);
+    throw new Error(message);
   }
 
-  appState.firebaseApp = initializeApp(config);
-  appState.auth = getAuth(appState.firebaseApp);
-  appState.authReady = true;
-  attachAuthStateListener();
+  try {
+    appState.firebaseApp = initializeApp(config);
+    appState.auth = getAuth(appState.firebaseApp);
+    appState.authReady = true;
+    attachAuthStateListener();
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    const message = "Firebase Auth לא הוגדר כראוי. בדקו את פרטי הפרויקט.";
+    setLoginMessage(message, true);
+    throw error;
+  }
 }
 
 function setScreen(screenName) {
@@ -143,11 +154,11 @@ async function signInWithEmailPassword(email, password) {
 }
 
 function attachAuthStateListener() {
-  if (!appState.auth || !appState.auth.onAuthStateChanged) {
+  if (!appState.auth) {
     return;
   }
 
-  appState.auth.onAuthStateChanged((user) => {
+  onAuthStateChanged(appState.auth, (user) => {
     appState.user = user;
     if (user) {
       showDashboardScreen();
@@ -180,7 +191,9 @@ async function handleLogin(event) {
   event.preventDefault();
 
   if (!appState.authReady || !appState.auth) {
-    setLoginMessage("Firebase Auth עוד לא מוכן. נא לנסות שוב בעוד מספר שניות.", true);
+    const message = "Firebase Auth עוד לא מוכן. נא לנסות שוב בעוד מספר שניות.";
+    console.error(message);
+    setLoginMessage(message, true);
     return;
   }
 
@@ -194,8 +207,9 @@ async function handleLogin(event) {
 
   try {
     setLoginMessage("מתחבר...");
-    await signInWithEmailPassword(email, password);
+    await signInWithEmailAndPassword(appState.auth, email, password);
   } catch (error) {
+    console.error("Firebase sign-in failed:", error);
     setLoginMessage(getHebrewAuthErrorMessage(error), true);
   }
 }
@@ -208,6 +222,7 @@ async function handleLogout() {
   try {
     await signOut(appState.auth);
   } catch (error) {
+    console.error("Firebase sign-out failed:", error);
     setLoginMessage(error?.message || "התנתקות נכשלה.", true);
   }
 }
@@ -216,7 +231,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     await initFirebaseClient();
   } catch (error) {
+    console.error("Firebase initialization failed during startup:", error);
     setLoginMessage("Firebase Auth לא הוגדר כראוי. בדקו את פרטי הפרויקט.", true);
+    return;
   }
 
   elements.loginForm.addEventListener("submit", handleLogin);
@@ -232,6 +249,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     setLoginMessage("עריכת מטפלת תתווסף בשלב הבא.");
   });
-
-  showLoginScreen();
 });
