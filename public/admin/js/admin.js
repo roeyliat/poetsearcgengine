@@ -7,11 +7,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore,
+  collection,
   doc,
   getDoc,
+  getDocs,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const AUTH_MODE = "email-password";
+const EXPECTED_THERAPIST_COUNT = 380;
 const firebaseConfig = {
   apiKey: "AIzaSyD0rxR7nP9WnHmHpEO094i-EIfiqFck_7c",
   authDomain: "poetsearchengine.firebaseapp.com",
@@ -41,6 +45,7 @@ const elements = {
   loginMessage: document.getElementById("login-message"),
   logoutButton: document.getElementById("logout-button"),
   addTherapistButton: document.getElementById("add-therapist-button"),
+  migrationButton: document.getElementById("migration-button"),
   therapistList: document.getElementById("therapist-list"),
 };
 
@@ -81,10 +86,23 @@ function setScreen(screenName) {
 
 function showLoginScreen() {
   setScreen("login-screen");
+  if (elements.migrationButton) {
+    elements.migrationButton.hidden = true;
+    elements.migrationButton.disabled = true;
+  }
 }
 
 function showDashboardScreen() {
   setScreen("dashboard-screen");
+}
+
+function updateMigrationButtonState(hasExistingData = false) {
+  if (!elements.migrationButton) {
+    return;
+  }
+
+  elements.migrationButton.hidden = hasExistingData;
+  elements.migrationButton.disabled = hasExistingData;
 }
 
 function renderTherapistList() {
@@ -96,10 +114,14 @@ function renderTherapistList() {
 
   elements.therapistList.innerHTML = list.map((therapist) => {
     const name = therapist.name || "ללא שם";
-    const region = therapist.region || "לא צוין";
-    const settlements = Array.isArray(therapist.settlements) && therapist.settlements.length ? therapist.settlements.join(", ") : "לא צוין";
-    const phone = therapist.phone || "—";
-    const email = therapist.email || "—";
+    const region = therapist.region || therapist.region_labels?.join(", ") || therapist.settlement_label || "לא צוין";
+    const settlements = Array.isArray(therapist.settlements) && therapist.settlements.length
+      ? therapist.settlements.join(", ")
+      : therapist.settlement_label || "לא צוין";
+    const phoneList = Array.isArray(therapist.phones) ? therapist.phones : therapist.phone ? [therapist.phone] : [];
+    const emailList = Array.isArray(therapist.emails) ? therapist.emails : therapist.email ? [therapist.email] : [];
+    const phone = phoneList[0] || "—";
+    const email = emailList[0] || "—";
     const visibility = therapist.visible === false ? "מוסתר" : "גלוי";
 
     return `
@@ -113,7 +135,7 @@ function renderTherapistList() {
         </div>
         <div class="therapist-actions">
           <span class="status-badge ${therapist.visible === false ? "hidden" : "visible"}">${escapeHtml(visibility)}</span>
-          <button type="button" class="table-button" data-action="edit" data-id="${escapeHtml(String(therapist.id || ""))}">עריכה</button>
+          <button type="button" class="table-button" data-action="edit" data-id="${escapeHtml(String(therapist.id || therapist.therapistId || ""))}">עריכה</button>
         </div>
       </article>
     `;
@@ -207,6 +229,8 @@ function attachAuthStateListener() {
 
       appState.user = user;
       showDashboardScreen();
+      await loadTherapistsFromFirestore();
+      updateMigrationButtonState(appState.therapists.length > 0);
     } catch (error) {
       console.error("Authorization check failed:", error);
       appState.user = null;
@@ -216,19 +240,137 @@ function attachAuthStateListener() {
   });
 }
 
-async function loadTherapists() {
-  appState.therapists = [
-    {
-      id: "placeholder-1",
-      name: "דוגמת מטפלת",
-      region: "מרכז",
-      settlements: ["רמת גן", "גבעתיים"],
-      phone: "050-0000000",
-      email: "example@example.com",
-      visible: true,
-    },
-  ];
-  renderTherapistList();
+async function generateStableTherapistId(therapist) {
+  const seed = JSON.stringify({
+    name: therapist?.name || "",
+    settlement_label: therapist?.settlement_label || "",
+    settlements: Array.isArray(therapist?.settlements) ? therapist.settlements : [],
+    phones: Array.isArray(therapist?.phones) ? therapist.phones : [],
+    emails: Array.isArray(therapist?.emails) ? therapist.emails : [],
+  });
+
+  const bytes = new TextEncoder().encode(seed);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash))
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 32);
+}
+
+async function hasExistingTherapists() {
+  if (!appState.db) {
+    return false;
+  }
+
+  const snapshot = await getDocs(collection(appState.db, "therapists"));
+  return !snapshot.empty;
+}
+
+async function loadTherapistsFromFirestore() {
+  if (!appState.db) {
+    appState.therapists = [];
+    renderTherapistList();
+    return;
+  }
+
+  try {
+    const snapshot = await getDocs(collection(appState.db, "therapists"));
+    appState.therapists = snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      return {
+        id: docSnapshot.id,
+        therapistId: data?.therapistId || docSnapshot.id,
+        ...data,
+      };
+    });
+
+    appState.therapists.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "he"));
+    renderTherapistList();
+    updateMigrationButtonState(appState.therapists.length > 0);
+  } catch (error) {
+    console.error("Failed to load therapists from Firestore:", error);
+    appState.therapists = [];
+    elements.therapistList.innerHTML = '<div class="empty-state">לא ניתן לטעון את רשימת המטפלים מהמאגר.</div>';
+    updateMigrationButtonState(false);
+  }
+}
+
+async function importTherapistsFromPublicJson() {
+  if (!appState.auth || !appState.db) {
+    setLoginMessage("המאגר לא מוכן לייבוא נתונים. נסו שוב מאוחר יותר.", true);
+    return;
+  }
+
+  const migrationButton = elements.migrationButton;
+  if (migrationButton) {
+    migrationButton.disabled = true;
+  }
+
+  try {
+    const response = await fetch("../data/therapists.json", { credentials: "same-origin" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const sourceTherapists = Array.isArray(payload?.therapists) ? payload.therapists : [];
+
+    if (sourceTherapists.length !== EXPECTED_THERAPIST_COUNT) {
+      setLoginMessage(`ייבוא נעצר: הכמות שנמצאה בקובץ (${sourceTherapists.length}) אינה תואמת ל- ${EXPECTED_THERAPIST_COUNT} רשומות צפויות.`, true);
+      return;
+    }
+
+    const collectionAlreadyHasData = await hasExistingTherapists();
+    if (collectionAlreadyHasData) {
+      setLoginMessage("ייבוא נעצר: הנתונים כבר קיימים במאגר, ולכן לא בוצע overwrite של תכנים קיימים.", true);
+      await loadTherapistsFromFirestore();
+      return;
+    }
+
+    const recordsToImport = [];
+    for (const therapist of sourceTherapists) {
+      const therapistId = await generateStableTherapistId(therapist);
+      recordsToImport.push({
+        id: therapistId,
+        data: {
+          ...therapist,
+          therapistId,
+          visible: true,
+        },
+      });
+    }
+
+    const generatedIds = recordsToImport.map(({ id }) => id);
+    if (generatedIds.length !== EXPECTED_THERAPIST_COUNT || new Set(generatedIds).size !== EXPECTED_THERAPIST_COUNT) {
+      setLoginMessage("ייבוא נעצר: יצירת מזהי המטפלים לא הושלמה כראוי, או שקיימים מזהים כפולים. לא נכתבו נתונים למאגר.", true);
+      return;
+    }
+
+    const batch = writeBatch(appState.db);
+    for (const { id, data } of recordsToImport) {
+      const ref = doc(collection(appState.db, "therapists"), id);
+      batch.set(ref, data);
+    }
+
+    await batch.commit();
+
+    const readbackSnapshot = await getDocs(collection(appState.db, "therapists"));
+    if (readbackSnapshot.size !== EXPECTED_THERAPIST_COUNT) {
+      setLoginMessage("ייבוא נכתב, אך האימות לאחר הקריאה מהמאגר נכשל: מספר הרשומות שהתקבל אינו 380. בדיקת אימות נכשלה.", true);
+      return;
+    }
+
+    setLoginMessage(`ייבוא הושלם: ${readbackSnapshot.size} מטפלים נטענו מהמאגרים ואומתו בהצלחה.`);
+    updateMigrationButtonState(true);
+    await loadTherapistsFromFirestore();
+  } catch (error) {
+    console.error("Migration import failed:", error);
+    setLoginMessage("ייבוא הנתונים נכשל. בדקו את הקובץ והמאגר ונסו שוב.", true);
+  } finally {
+    if (elements.migrationButton) {
+      elements.migrationButton.disabled = false;
+    }
+  }
 }
 
 async function handleLogin(event) {
@@ -282,6 +424,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   elements.loginForm.addEventListener("submit", handleLogin);
   elements.logoutButton.addEventListener("click", handleLogout);
+  elements.migrationButton.addEventListener("click", importTherapistsFromPublicJson);
   elements.addTherapistButton.addEventListener("click", () => {
     setLoginMessage("הוספת מטפלת תתווסף בשלב הבא.");
   });
