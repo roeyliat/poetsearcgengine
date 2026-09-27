@@ -13,6 +13,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -175,6 +176,29 @@ function renderTherapistList() {
       `;
     })
     .join("");
+}
+
+function getPublicTherapistProjection(sourceTherapist = {}) {
+  return {
+    therapistId: String(sourceTherapist.therapistId || sourceTherapist.id || ""),
+    name: String(sourceTherapist.name || "").trim(),
+    settlement_label: sourceTherapist.settlement_label ?? null,
+    settlements: Array.isArray(sourceTherapist.settlements) ? sourceTherapist.settlements : [],
+    regions: Array.isArray(sourceTherapist.regions) ? sourceTherapist.regions : [],
+    region_labels: Array.isArray(sourceTherapist.region_labels) ? sourceTherapist.region_labels : [],
+    age_min: sourceTherapist.age_min ?? null,
+    age_max: sourceTherapist.age_max ?? null,
+    age_label: sourceTherapist.age_label ?? null,
+    age_open_ended: Boolean(sourceTherapist.age_open_ended),
+    phones: Array.isArray(sourceTherapist.phones) ? sourceTherapist.phones : [],
+    emails: Array.isArray(sourceTherapist.emails) ? sourceTherapist.emails : [],
+    languages: Array.isArray(sourceTherapist.languages) ? sourceTherapist.languages : [],
+    language_labels: Array.isArray(sourceTherapist.language_labels) ? sourceTherapist.language_labels : [],
+    funds: Array.isArray(sourceTherapist.funds) ? sourceTherapist.funds : [],
+    fund_labels: Array.isArray(sourceTherapist.fund_labels) ? sourceTherapist.fund_labels : [],
+    online: Boolean(sourceTherapist.online),
+    in_person: Boolean(sourceTherapist.in_person),
+  };
 }
 
 function escapeHtml(value) {
@@ -426,8 +450,24 @@ async function toggleTherapistVisibility(therapistId, visible) {
     return;
   }
 
-  const ref = doc(appState.db, "therapists", therapistId);
-  await updateDoc(ref, { visible });
+  const therapist = appState.therapists.find((item) => String(item.therapistId || item.id) === String(therapistId));
+  if (!therapist) {
+    return;
+  }
+
+  const sourceRef = doc(appState.db, "therapists", therapistId);
+  const publicRef = doc(appState.db, "publicTherapists", therapistId);
+  const batch = writeBatch(appState.db);
+
+  if (visible) {
+    batch.update(sourceRef, { visible: true });
+    batch.set(publicRef, getPublicTherapistProjection(therapist));
+  } else {
+    batch.update(sourceRef, { visible: false });
+    batch.delete(publicRef);
+  }
+
+  await batch.commit();
   await loadTherapistsFromFirestore();
   setDashboardNotification(visible ? "המטפלת הוצגה מחדש." : "המטפלת הוסתרה.");
 }
@@ -451,17 +491,32 @@ async function handleTherapistFormSubmit(event) {
         throw new Error("לא נבחר מטפל לעריכה.");
       }
 
-      const ref = doc(appState.db, "therapists", appState.editingTherapistId);
-      const { therapistId: _ignored, visible: _visibleIgnored, ...rest } = payload;
-      await updateDoc(ref, {
-        ...rest,
-        therapistId: appState.editingTherapistId,
-      });
+      const therapistId = appState.editingTherapistId;
+      const currentTherapist = appState.therapists.find((item) => String(item.therapistId || item.id) === String(therapistId));
+      const sourceRef = doc(appState.db, "therapists", therapistId);
+      const publicRef = doc(appState.db, "publicTherapists", therapistId);
+      const batch = writeBatch(appState.db);
+      const updatedSource = {
+        ...payload,
+        therapistId,
+        visible: payload.visible,
+      };
+
+      batch.update(sourceRef, updatedSource);
+
+      if (payload.visible === false) {
+        batch.delete(publicRef);
+      } else {
+        batch.set(publicRef, getPublicTherapistProjection(updatedSource));
+      }
+
+      await batch.commit();
       setDashboardNotification("השינויים נשמרו בהצלחה.");
     } else {
       const therapistId = await generateStableTherapistId(payload);
-      const ref = doc(appState.db, "therapists", therapistId);
-      const existingDoc = await getDoc(ref);
+      const sourceRef = doc(appState.db, "therapists", therapistId);
+      const publicRef = doc(appState.db, "publicTherapists", therapistId);
+      const existingDoc = await getDoc(sourceRef);
 
       if (existingDoc.exists()) {
         const duplicateMessage = "מטפל/ת עם פרטים זהים כבר קיימ/ת במאגר.";
@@ -470,11 +525,16 @@ async function handleTherapistFormSubmit(event) {
         return;
       }
 
-      await setDoc(ref, {
+      const sourceDocument = {
         ...payload,
         therapistId,
         visible: true,
-      });
+      };
+
+      const batch = writeBatch(appState.db);
+      batch.set(sourceRef, sourceDocument);
+      batch.set(publicRef, getPublicTherapistProjection(sourceDocument));
+      await batch.commit();
       setDashboardNotification("המטפלת נוספה בהצלחה.");
     }
 

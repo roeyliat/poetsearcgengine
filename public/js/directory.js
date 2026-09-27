@@ -17,6 +17,20 @@
   let visibleLimit = PAGE_SIZE;
   let inputTimer;
 
+  function getFirestoreDb() {
+    if (!window.firebase || !window.firebase.apps || !window.firebase.apps.length) {
+      if (window.POET_FIREBASE_CONFIG) {
+        window.firebase.initializeApp(window.POET_FIREBASE_CONFIG);
+      }
+    }
+
+    if (!window.firebase || !window.firebase.firestore) {
+      return null;
+    }
+
+    return window.firebase.firestore();
+  }
+
   function checkedValues(group) {
     return Array.from(root.querySelectorAll('[data-filter="' + group + '"] input:checked')).map(
       function (input) {
@@ -196,27 +210,66 @@
   bind();
   countEl.textContent = "טוען את כלי החיפוש…";
 
-  fetch(POET_DIRECTORY.endpoint, { credentials: "same-origin" })
-    .then(function (res) {
-      if (!res.ok) {
-        throw new Error("HTTP " + res.status);
-      }
-      return res.json();
-    })
-    .then(function (data) {
-      therapists = data.therapists || data || [];
-      if (!Array.isArray(therapists)) {
-        therapists = [];
-      }
-      therapists.sort(function (a, b) {
-        return String(a.name || "").localeCompare(String(b.name || ""), "he");
+  function loadTherapistsFromJson() {
+    return fetch(POET_DIRECTORY.endpoint, { credentials: "same-origin" })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        const list = data.therapists || data || [];
+        if (!Array.isArray(list)) {
+          return [];
+        }
+        return list;
       });
-      render();
-    })
-    .catch(function () {
-      cardsEl.setAttribute("aria-busy", "false");
-      countEl.textContent = "";
-      emptyEl.hidden = false;
-      emptyEl.textContent = "לא ניתן לטעון את כלי החיפוש כרגע. נסו לרענן את העמוד.";
-    });
+  }
+
+  function loadTherapistsFromFirestore() {
+    const db = getFirestoreDb();
+    if (!db) {
+      throw new Error("Firebase Firestore is unavailable.");
+    }
+
+    return db.collection("publicTherapists")
+      .get()
+      .then(function (snapshot) {
+        return snapshot.docs.map(function (docSnapshot) {
+          return Object.assign({}, docSnapshot.data(), { id: docSnapshot.id });
+        });
+      });
+  }
+
+  function hydrateDirectory() {
+    return loadTherapistsFromFirestore()
+      .then(function (results) {
+        therapists = Array.isArray(results) ? results : [];
+        therapists.sort(function (a, b) {
+          return String(a.name || "").localeCompare(String(b.name || ""), "he");
+        });
+        render();
+      })
+      .catch(function (error) {
+        console.warn("Firestore directory load failed; falling back to therapists.json.", error);
+        return loadTherapistsFromJson()
+          .then(function (results) {
+            therapists = Array.isArray(results) ? results : [];
+            therapists.sort(function (a, b) {
+              return String(a.name || "").localeCompare(String(b.name || ""), "he");
+            });
+            render();
+          })
+          .catch(function (fallbackError) {
+            console.error("Failed to load public therapist data from Firestore and JSON fallback.", fallbackError);
+            cardsEl.setAttribute("aria-busy", "false");
+            countEl.textContent = "";
+            emptyEl.hidden = false;
+            emptyEl.textContent = "לא ניתן לטעון את כלי החיפוש כרגע. נסו לרענן את העמוד.";
+          });
+      });
+  }
+
+  hydrateDirectory();
 })();

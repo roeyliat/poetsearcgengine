@@ -153,8 +153,19 @@
     </footer>
 
     <script>
+      window.POET_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyD0rxR7nP9WnHmHpEO094i-EIfiqFck_7c",
+        authDomain: "poetsearchengine.firebaseapp.com",
+        projectId: "poetsearchengine",
+        storageBucket: "poetsearchengine.firebasestorage.app",
+        messagingSenderId: "192182653029",
+        appId: "1:192182653029:web:605de69563b1a8da0e768c",
+      };
+
       window.POET_DIRECTORY = { endpoint: "data/therapists.json" };
     </script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="js/directory.js"></script>
   </body>
 </html>
