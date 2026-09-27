@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ניהול מאגר מטפלי POET</title>
+    <meta name="description" content="ניהול מאגר מטפלי POET">
+    <link rel="icon" href="data:,">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+  </head>
+  <body class="poet-admin-shell">
+    <div id="app">
+      <section id="login-screen" class="screen visible" aria-live="polite">
+        <div class="admin-panel login-panel">
+          <div class="admin-brand">
+            <img src="https://frisch-ot.com/wp-content/uploads/2021/10/POET-logoR-72dpi.png" alt="POET">
+          </div>
+          <h1>ניהול מאגר מטפלי POET</h1>
+          <form id="login-form" novalidate>
+            <label>
+              <span>אימייל</span>
+              <input type="email" id="email" name="email" autocomplete="email" required>
+            </label>
+            <label>
+              <span>סיסמה</span>
+              <input type="password" id="password" name="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit" class="primary-button">התחברות</button>
+          </form>
+          <p id="login-message" class="message" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="dashboard-screen" class="screen" aria-live="polite">
+        <header class="admin-header">
+          <div>
+            <p class="eyebrow">ניהול</p>
+            <h1>מאגר מטפלי POET</h1>
+          </div>
+          <button type="button" id="logout-button" class="secondary-button">יציאה</button>
+        </header>
+
+        <main class="admin-main">
+          <div class="toolbar">
+            <button type="button" id="add-therapist-button" class="primary-button">הוספת מרפא/ה</button>
+          </div>
+
+          <section class="list-panel">
+            <div class="list-header">
+              <h2>רשימת מטפלים</h2>
+            </div>
+            <div id="therapist-list" class="therapist-list" aria-live="polite">
+              <div class="empty-state">טוען רשימת מטפלים…</div>
+            </div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+  </body>
+</html>
