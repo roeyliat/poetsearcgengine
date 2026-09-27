@@ -44,9 +44,10 @@
         </header>
 
         <main class="admin-main">
+          <div id="dashboard-notification" class="dashboard-notification" hidden></div>
+
           <div class="toolbar">
             <button type="button" id="add-therapist-button" class="primary-button">הוספת מרפא/ה</button>
-            <button type="button" id="migration-button" class="secondary-button migration-button" hidden>ייבוא נתונים ראשוני</button>
           </div>
 
           <section class="list-panel">
@@ -59,6 +60,111 @@
           </section>
         </main>
       </section>
+    </div>
+
+    <div id="therapist-modal" class="modal" aria-hidden="true" hidden>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="therapist-modal-title">
+        <div class="modal-header">
+          <h2 id="therapist-modal-title">הוספת מטפלת</h2>
+          <button type="button" id="close-modal-button" class="close-modal-button" aria-label="סגור">×</button>
+        </div>
+
+        <form id="therapist-form" novalidate>
+          <div class="form-grid">
+            <label class="full-width">
+              <span>שם</span>
+              <input type="text" id="therapist-name" name="name" required>
+            </label>
+
+            <label>
+              <span>כותרת יישוב</span>
+              <input type="text" id="therapist-settlement-label" name="settlement_label">
+            </label>
+
+            <label>
+              <span>יישובים</span>
+              <input type="text" id="therapist-settlements" name="settlements" placeholder="למשל: רמת גן, גבעתיים">
+            </label>
+
+            <label>
+              <span>אזורים</span>
+              <input type="text" id="therapist-regions" name="regions" placeholder="למשל: north, center">
+            </label>
+
+            <label>
+              <span>תיוגי אזורים</span>
+              <input type="text" id="therapist-region-labels" name="region_labels" placeholder="למשל: צפון, מרכז">
+            </label>
+
+            <label>
+              <span>גיל מינימום</span>
+              <input type="number" id="therapist-age-min" name="age_min" min="0" step="1">
+            </label>
+
+            <label>
+              <span>גיל מקסימום</span>
+              <input type="number" id="therapist-age-max" name="age_max" min="0" step="1">
+            </label>
+
+            <label>
+              <span>טקסט גילאים</span>
+              <input type="text" id="therapist-age-label" name="age_label" placeholder="למשל: 0–6">
+            </label>
+
+            <label class="checkbox-row full-width">
+              <input type="checkbox" id="therapist-age-open-ended" name="age_open_ended">
+              <span>גיל ללא הגבלה</span>
+            </label>
+
+            <label>
+              <span>טלפונים</span>
+              <input type="text" id="therapist-phones" name="phones" placeholder="למשל: 050-0000000, 03-0000000">
+            </label>
+
+            <label>
+              <span>אימיילים</span>
+              <input type="text" id="therapist-emails" name="emails" placeholder="למשל: mail@example.com, second@example.com">
+            </label>
+
+            <label>
+              <span>שפות</span>
+              <input type="text" id="therapist-languages" name="languages" placeholder="למשל: hebrew, arabic">
+            </label>
+
+            <label>
+              <span>תיוגי שפות</span>
+              <input type="text" id="therapist-language-labels" name="language_labels" placeholder="למשל: עברית, ערבית">
+            </label>
+
+            <label>
+              <span>קרנות</span>
+              <input type="text" id="therapist-funds" name="funds" placeholder="למשל: maccabi, clalit">
+            </label>
+
+            <label>
+              <span>תיוגי קרנות</span>
+              <input type="text" id="therapist-fund-labels" name="fund_labels" placeholder="למשל: מכבי, כללית">
+            </label>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="therapist-online" name="online">
+              <span>טיפול מקוון</span>
+            </label>
+
+            <label class="checkbox-row">
+              <input type="checkbox" id="therapist-in-person" name="in_person">
+              <span>טיפול פנים אל פנים</span>
+            </label>
+          </div>
+
+          <div id="therapist-form-error" class="form-error" aria-live="polite" hidden></div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancel-therapist-button" class="secondary-button">ביטול</button>
+            <button type="submit" class="primary-button">שמירה</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script type="module" src="js/admin.js"></script>
