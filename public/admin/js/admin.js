@@ -8,7 +8,7 @@ import {
 
 const AUTH_MODE = "email-password";
 const firebaseConfig = {
-  apiKey: "AIzaSyD0rxR7nP9WnHmHpE0094i-EIfiqFck_7c",
+  apiKey: "AIzaSyD0rxR7nP9WnHmHpEO094i-EIfiqFck_7c",
   authDomain: "poetsearchengine.firebaseapp.com",
   projectId: "poetsearchengine",
   storageBucket: "poetsearchengine.firebasestorage.app",
