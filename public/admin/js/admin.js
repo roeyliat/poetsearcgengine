@@ -5,6 +5,11 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const AUTH_MODE = "email-password";
 const firebaseConfig = {
@@ -52,6 +57,7 @@ async function initFirebaseClient() {
   try {
     appState.firebaseApp = initializeApp(config);
     appState.auth = getAuth(appState.firebaseApp);
+    appState.db = getFirestore(appState.firebaseApp);
     appState.authReady = true;
     attachAuthStateListener();
   } catch (error) {
@@ -153,22 +159,60 @@ async function signInWithEmailPassword(email, password) {
   return signInWithEmailAndPassword(appState.auth, email, password);
 }
 
+async function checkAdminAuthorization(user) {
+  if (!user || !appState.db) {
+    return false;
+  }
+
+  try {
+    const adminDocRef = doc(appState.db, "admins", user.uid);
+    const adminDoc = await getDoc(adminDocRef);
+
+    if (!adminDoc.exists()) {
+      return false;
+    }
+
+    return !!adminDoc.data()?.active;
+  } catch (error) {
+    console.error("Firestore admin authorization failed:", error);
+    setLoginMessage("לא ניתן לבדוק את הרשאות המנהל. נסו שוב מאוחר יותר.", true);
+    return false;
+  }
+}
+
 function attachAuthStateListener() {
   if (!appState.auth) {
     return;
   }
 
-  onAuthStateChanged(appState.auth, (user) => {
-    appState.user = user;
-    if (user) {
-      showDashboardScreen();
-      loadTherapists();
+  onAuthStateChanged(appState.auth, async (user) => {
+    if (!user) {
+      appState.user = null;
+      showLoginScreen();
+      elements.loginForm.reset();
+      setLoginMessage("");
       return;
     }
 
-    showLoginScreen();
-    elements.loginForm.reset();
-    setLoginMessage("");
+    try {
+      const isAdmin = await checkAdminAuthorization(user);
+
+      if (!isAdmin) {
+        await signOut(appState.auth);
+        appState.user = null;
+        showLoginScreen();
+        setLoginMessage("למשתמש זה אין הרשאת מנהל.", true);
+        return;
+      }
+
+      appState.user = user;
+      showDashboardScreen();
+    } catch (error) {
+      console.error("Authorization check failed:", error);
+      appState.user = null;
+      showLoginScreen();
+      setLoginMessage("לא ניתן לבדוק את הרשאות המנהל. נסו שוב מאוחר יותר.", true);
+    }
   });
 }
 
