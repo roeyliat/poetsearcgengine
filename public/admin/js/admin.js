@@ -1,3 +1,11 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 const AUTH_MODE = "email-password";
 const firebaseConfig = {
   apiKey: "AIzaSyD0rxR7nP9WnHmHpE0094i-EIfiqFck_7c",
@@ -14,6 +22,7 @@ const appState = {
   db: null,
   user: null,
   therapists: [],
+  authReady: false,
 };
 
 const elements = {
@@ -28,41 +37,18 @@ const elements = {
   therapistList: document.getElementById("therapist-list"),
 };
 
-function initFirebaseClient() {
+async function initFirebaseClient() {
   const config = firebaseConfig;
 
-  const firebaseScriptUrl = "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  const authScriptUrl = "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  const firestoreScriptUrl = "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const scripts = [firebaseScriptUrl, authScriptUrl, firestoreScriptUrl];
-
-  const existing = Array.from(document.querySelectorAll("script[data-poet-firebase]")).length;
-  if (existing > 0) {
+  if (!config || !config.apiKey || !config.projectId || !config.appId) {
+    setLoginMessage("פרטי Firebase חסרים מהקובץ ההגדרה של האתר.", true);
     return;
   }
 
-  for (const scriptUrl of scripts) {
-    const script = document.createElement("script");
-    script.src = scriptUrl;
-    script.dataset.poetFirebase = "true";
-    script.async = true;
-    document.head.appendChild(script);
-  }
-
-  const waitForFirebase = () => {
-    if (window.firebase && window.firebase.initializeApp && window.firebase.auth && window.firebase.firestore) {
-      appState.firebaseApp = window.firebase.initializeApp(config);
-      appState.auth = window.firebase.auth();
-      appState.db = window.firebase.firestore();
-      attachAuthStateListener();
-      return;
-    }
-
-    window.setTimeout(waitForFirebase, 200);
-  };
-
-  waitForFirebase();
+  appState.firebaseApp = initializeApp(config);
+  appState.auth = getAuth(appState.firebaseApp);
+  appState.authReady = true;
+  attachAuthStateListener();
 }
 
 function setScreen(screenName) {
@@ -149,12 +135,11 @@ function getHebrewAuthErrorMessage(error) {
 }
 
 async function signInWithEmailPassword(email, password) {
-  if (!appState.auth || !window.firebase || !window.firebase.auth) {
+  if (!appState.authReady || !appState.auth) {
     throw new Error("Firebase Auth is not initialized yet.");
   }
 
-  const auth = appState.auth;
-  return auth.signInWithEmailAndPassword(email, password);
+  return signInWithEmailAndPassword(appState.auth, email, password);
 }
 
 function attachAuthStateListener() {
@@ -194,6 +179,11 @@ async function loadTherapists() {
 async function handleLogin(event) {
   event.preventDefault();
 
+  if (!appState.authReady || !appState.auth) {
+    setLoginMessage("Firebase Auth עוד לא מוכן. נא לנסות שוב בעוד מספר שניות.", true);
+    return;
+  }
+
   const email = elements.emailInput.value.trim();
   const password = elements.passwordInput.value;
 
@@ -211,18 +201,24 @@ async function handleLogin(event) {
 }
 
 async function handleLogout() {
-  if (!appState.auth || !appState.auth.signOut) {
+  if (!appState.authReady || !appState.auth) {
     return;
   }
 
   try {
-    await appState.auth.signOut();
+    await signOut(appState.auth);
   } catch (error) {
     setLoginMessage(error?.message || "התנתקות נכשלה.", true);
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await initFirebaseClient();
+  } catch (error) {
+    setLoginMessage("Firebase Auth לא הוגדר כראוי. בדקו את פרטי הפרויקט.", true);
+  }
+
   elements.loginForm.addEventListener("submit", handleLogin);
   elements.logoutButton.addEventListener("click", handleLogout);
   elements.addTherapistButton.addEventListener("click", () => {
@@ -237,6 +233,5 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoginMessage("עריכת מטפלת תתווסף בשלב הבא.");
   });
 
-  initFirebaseClient();
   showLoginScreen();
 });
